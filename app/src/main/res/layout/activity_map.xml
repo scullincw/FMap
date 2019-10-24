@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fl_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white">
+    android:layout_height="match_parent">
 
-
-    <com.amap.api.maps.TextureMapView
-        android:id="@+id/map"
-        android:background="@color/white"
+    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-    <com.jiyouliang.fmap.view.map.SupendViewContainer
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
 
-</android.support.constraint.ConstraintLayout>
+        <com.amap.api.maps.TextureMapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white" />
+
+        <com.jiyouliang.fmap.view.map.SupendViewContainer
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
+    </android.support.constraint.ConstraintLayout>
+
+</FrameLayout>

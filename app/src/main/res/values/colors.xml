@@ -26,4 +26,16 @@
     <drawable name="transparent">#00000000</drawable>
     <color name="navpage">#FFE1E8EB</color>
     <color name="toast_text_color">#F2F3F8</color>
+
+    <color name="text_grey">#818593</color>
+    <color name="white_ce">#CED4EA</color>
+
+    <color name="around_bg">#1A2942</color>
+    <color name="red_ff">#FFFF4949</color>
+    <color name="grey_81">#818593</color>
+    <color name="grey_6d">#6D7DA0</color>
+    <color name="dark_bg">#122037</color>
+
+
+
 </resources>

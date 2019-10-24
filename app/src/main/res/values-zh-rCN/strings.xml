@@ -68,4 +68,13 @@
     <string name="search_nearby">搜索附近</string>
     <string name="sear_loc_bus_subway">查找地点、公交、地铁</string>
     <string name="please_open_gps">请开启定位</string>
+
+    <string name="car_park">停车场</string>
+    <string name="petrol_station">加油站</string>
+    <string name="dinner">餐饮</string>
+    <string name="atm">ATM</string>
+    <string name="super_market">超市</string>
+    <string name="car_fix">汽车维修</string>
+    <string name="hospital">医院</string>
+    <string name="hotel">酒店</string>
 </resources>

@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,6 +25,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -98,6 +100,10 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     private TextureMapView mMapView;
     private AMap aMap;
     private UiSettings mUiSettings;
+
+    private PoiManager mPoiManager;
+    private FrameLayout fl_root;
+
 
     private AMapLocationClient mLocationClient;
     private AMapLocationClientOption mLocationOption;
@@ -177,6 +183,8 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     private ProgressBar mSearchProgressBar;
     private LocationManager mLocMgr;
 
+    private TextView findAroundText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -190,7 +198,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     private void initView(Bundle savedInstanceState) {
         mGpsView = (GPSView) findViewById(R.id.gps_view);
         mRouteView = (RouteView) findViewById(R.id.route_view);
-        mFrequentView = (FrequentView) findViewById(R.id.fv);
+//        mFrequentView = (FrequentView) findViewById(R.id.fv);
         //获取地图控件引用
         mMapView = (TextureMapView) findViewById(R.id.map);
         //交通流量状态控件
@@ -204,6 +212,19 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
         mGpsView.setGpsState(mCurrentGpsState);
         mNearbySearcyView = (NearbySearchView) findViewById(R.id.nearby_view);
+
+        findAroundText = findViewById(R.id.search_around);
+        findAroundText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MapActivity.this, AroundActivity.class);
+                startActivityForResult(intent, Constant.AroundMsg.REQUEST_CODE);
+            }
+        });
+        fl_root = findViewById(R.id.fl_root);
+
+        mPoiManager = new PoiManager(this, aMap, fl_root, mLLSearchContainer);
+
         //底部弹出BottomSheet
         mBottomSheet = findViewById(R.id.poi_detail_bottom);
         mBehavior = BottomSheetBehavior.from(mBottomSheet);
@@ -221,18 +242,18 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         mFeedbackContainer.setVisibility(View.GONE);
         mSupendPartitionView = (SupendPartitionView) findViewById(R.id.spv);
         // 分享组件
-        mShareContainer = (LinearLayout)findViewById(R.id.rl_right);
-        mImgBtnBack= (ImageButton)findViewById(R.id.ib_back);
+//        mShareContainer = (LinearLayout)findViewById(R.id.rl_right);
+        mImgBtnBack = (ImageButton) findViewById(R.id.ib_back);
         // 路线
-        mTvRoute = (TextView)findViewById(R.id.tv_route);
+        mTvRoute = (TextView) findViewById(R.id.tv_route);
         // 搜索区域
-        mLLSearchContainer = (LinearLayout)findViewById(R.id.ll_search_container);
-        mRecycleViewSearch = (RecyclerView)findViewById(R.id.rv_search);
-        mIvLeftSearch = (ImageView)findViewById(R.id.iv_search_left);
-        mEtSearchTip = (EditText)findViewById(R.id.et_search_tip);
+        mLLSearchContainer = (LinearLayout) findViewById(R.id.ll_search_container);
+        mRecycleViewSearch = (RecyclerView) findViewById(R.id.rv_search);
+        mIvLeftSearch = (ImageView) findViewById(R.id.iv_search_left);
+        mEtSearchTip = (EditText) findViewById(R.id.et_search_tip);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         mRecycleViewSearch.setLayoutManager(layoutManager);
-        mSearchProgressBar = (ProgressBar)findViewById(R.id.progressBar);
+        mSearchProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         setBottomSheet();
         setUpMap();
@@ -398,7 +419,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         //头部View点击处理
         mMapHeaderView.setOnMapHeaderViewClickListener(this);
 
-        mShareContainer.setOnClickListener(this);
+//        mShareContainer.setOnClickListener(this);
         // 注册高德地图分享回调
         mShareSearch.setOnShareSearchListener(this);
         // 头部返回
@@ -441,8 +462,8 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         double lng = location.getLongitude();
         double lat = location.getLatitude();
         // 当前poiname和上次不相等才更新显示
-        if(location.getPoiName() != null && !location.getPoiName().equals(mPoiName)){
-            if(!isPoiClick){
+        if (location.getPoiName() != null && !location.getPoiName().equals(mPoiName)) {
+            if (!isPoiClick) {
                 // 点击poi时,定位位置和点击位置不一定一样
                 mPoiName = location.getPoiName();
                 showPoiNameText(String.format("在%s附近", mPoiName));
@@ -452,7 +473,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
         //参数依次是：视角调整区域的中心点坐标、希望调整到的缩放级别、俯仰角0°~45°（垂直与地图时为0）、偏航角 0~360° (正北方为0)
         mLatLng = new LatLng(lat, lng);
-        if(!location.getCity().equals(mCity)){
+        if (!location.getCity().equals(mCity)) {
             mCity = location.getCity();
         }
 
@@ -681,7 +702,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     @Override
     public void onGPSClick() {
-        if(!isGpsOpen()){
+        if (!isGpsOpen()) {
             showToast(getString(R.string.please_open_gps));
             return;
         }
@@ -711,7 +732,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         if (mBottomSheet.getVisibility() == View.GONE || mBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
             showPoiDetail("我的位置", String.format("在%s附近", mPoiName));
             moveGspButtonAbove();
-        }else{
+        } else {
             mTvLocTitle.setText("我的位置");
             mTvLocation.setText(String.format("在%s附近", mPoiName));
         }
@@ -787,7 +808,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
                 setUpMap();
             }
         }
-        if(mLocationOption != null && mLocationClient != null){
+        if (mLocationOption != null && mLocationClient != null) {
             mLocationOption.setInterval(2000);//定位时间间隔，默认2000ms
             mLocationClient.setLocationOption(mLocationOption);
             aMap.setMyLocationEnabled(true);
@@ -812,7 +833,6 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         };
         registerReceiver(mWechatBroadcast, filter);
     }*/
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -841,7 +861,6 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         }
 
     }*/
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -914,7 +933,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     @Override
     public void onClick(View v) {
-        if(v == null){
+        if (v == null) {
             return;
         }
         // 点击关闭POI detail
@@ -925,33 +944,33 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
             return;
         }
 
-        // 分享
-        if(v == mShareContainer){
-            if(mAmapLocation != null && mLatLng != null){
-                if(isPoiClick){
-                    // 分享点击poi的位置
-                    shareLocation(mPoiName, mClickPoiLatLng.latitude, mClickPoiLatLng.longitude);
-                }else{
-                    // 分享当前定位位置
-                    shareLocation(mPoiName, mLatLng.latitude, mLatLng.longitude);
-                }
-            }
-            return;
-        }
+//        // 分享
+//        if(v == mShareContainer){
+//            if(mAmapLocation != null && mLatLng != null){
+//                if(isPoiClick){
+//                    // 分享点击poi的位置
+//                    shareLocation(mPoiName, mClickPoiLatLng.latitude, mClickPoiLatLng.longitude);
+//                }else{
+//                    // 分享当前定位位置
+//                    shareLocation(mPoiName, mLatLng.latitude, mLatLng.longitude);
+//                }
+//            }
+//            return;
+//        }
 
         // 头部返回ImageButton
-        if(v == mImgBtnBack){
+        if (v == mImgBtnBack) {
             mBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             return;
         }
 
         // 路线,进入导航页面
-        if(v == mTvRoute){
-            if(mLatLng == null){
+        if (v == mTvRoute) {
+            if (mLatLng == null) {
                 showToast(getString(R.string.location_failed_hold_on));
                 return;
             }
-            if(mClickPoiLatLng == null){
+            if (mClickPoiLatLng == null) {
                 showToast(getString(R.string.please_select_dest_loc));
                 return;
             }
@@ -966,7 +985,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         }
 
         // 点击搜索左侧返回箭头
-        if(v == mIvLeftSearch){
+        if (v == mIvLeftSearch) {
             hideSearchTipView();
             showMapView();
             return;
@@ -1006,14 +1025,15 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         mBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         //gsp控件回退到原来位置、并显示底部其他控件
         mRouteView.setVisibility(View.VISIBLE);
-        mFrequentView.setVisibility(View.VISIBLE);
-        mNearbySearcyView.setVisibility(View.VISIBLE);
+//        mFrequentView.setVisibility(View.VISIBLE);
+//        mNearbySearcyView.setVisibility(View.VISIBLE);
     }
 
     /**
      * 显示底部POI详情
+     *
      * @param locTitle 定位标题,比如当前所在位置名称
-     * @param locInfo 定位信息,比如当前在什么附近/距离当前位置多少米
+     * @param locInfo  定位信息,比如当前在什么附近/距离当前位置多少米
      */
     @Override
     public void showPoiDetail(String locTitle, String locInfo) {
@@ -1021,8 +1041,8 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         mBottomSheet.setVisibility(View.VISIBLE);
         mBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         mRouteView.setVisibility(View.GONE);
-        mFrequentView.setVisibility(View.GONE);
-        mNearbySearcyView.setVisibility(View.GONE);
+//        mFrequentView.setVisibility(View.GONE);
+//        mNearbySearcyView.setVisibility(View.GONE);
         //底部：打车、路线...
         mPoiDetailTaxi.setVisibility(View.VISIBLE);
         //我的位置
@@ -1199,14 +1219,14 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     public void smoothSlideUpMap() {
         switch (mGpsView.getGpsState()) {
             case GPSView.STATE_ROTATE:
-                if(!isPoiClick){
+                if (!isPoiClick) {
                     mMapType = MyLocationStyle.LOCATION_TYPE_MAP_ROTATE;
                 }
                 break;
             case GPSView.STATE_UNLOCKED:
             case GPSView.STATE_LOCKED:
                 // 当前没D有操作poi点击
-                if(!isPoiClick){
+                if (!isPoiClick) {
                     mMapType = MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER;
                 }
                 break;
@@ -1214,9 +1234,9 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         setLocationStyle();
         //禁用手势操作
         aMap.getUiSettings().setAllGesturesEnabled(false);
-        if(!isPoiClick){
+        if (!isPoiClick) {
             mMoveToCenter = true;
-        }else{
+        } else {
             mMoveToCenter = false;
         }
         ViewGroup.LayoutParams lp = mMapView.getLayoutParams();
@@ -1250,12 +1270,13 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * 高德地图位置转短串分享
+     *
      * @param snippet 位置名称
-     * @param lat 维度
-     * @param lng 经度
+     * @param lat     维度
+     * @param lng     经度
      */
     private void shareLocation(String snippet, double lat, double lng) {
-        if(TextUtils.isEmpty(snippet)){
+        if (TextUtils.isEmpty(snippet)) {
             return;
         }
         // addTestLocationMarker(snippet);
@@ -1285,7 +1306,8 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * 高德地图分享位置短串回调
-     * @param url 网页url
+     *
+     * @param url       网页url
      * @param errorCode 错误码
      */
     @Override
@@ -1320,17 +1342,17 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // 处理返回键
-        if(keyCode == KeyEvent.KEYCODE_BACK){
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
             MapMode mode = mMapMode;
-            if(mode == MapMode.NORMAL){
+            if (mode == MapMode.NORMAL) {
                 // BottomSheet展开,折叠BottomSheet不关闭Activity
-                if(mBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED){
+                if (mBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
                     mBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     return true;
-                }else{
+                } else {
                     return super.onKeyDown(keyCode, event);
                 }
-            }else if(mode == MapMode.SEARCH){
+            } else if (mode == MapMode.SEARCH) {
                 hideSearchTipView();
                 showMapView();
                 mMapMode = MapMode.NORMAL;
@@ -1343,12 +1365,13 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * 地图POI点击
+     *
      * @param poi
      */
     @Override
     public void onPOIClick(Poi poi) {
-        LogUtil.d(TAG, "onPOIClick,poi="+poi);
-        if(poi == null || poi.getCoordinate() == null || TextUtils.isEmpty(poi.getName())){
+        LogUtil.d(TAG, "onPOIClick,poi=" + poi);
+        if (poi == null || poi.getCoordinate() == null || TextUtils.isEmpty(poi.getName())) {
             return;
         }
         // 当前点击坐标
@@ -1386,7 +1409,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         if (mBottomSheet.getVisibility() == View.GONE || mBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
             showPoiDetail(poiName, String.format("距离您%s", distanceStr));
             moveGspButtonAbove();
-        }else{
+        } else {
             mTvLocTitle.setText(poiName);
             mTvLocation.setText(String.format("距离您%s", distanceStr));
         }
@@ -1402,10 +1425,11 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * 移动地图中心点到指定位置
+     *
      * @param latLng
      */
-    private void animMap(LatLng latLng){
-        if(latLng != null){
+    private void animMap(LatLng latLng) {
+        if (latLng != null) {
             aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, mZoomLevel));
         }
     }
@@ -1413,7 +1437,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     /**
      * 隐藏地图图层
      */
-    private void hideMapView(){
+    private void hideMapView() {
         mMapView.setVisibility(View.GONE);
         mMapHeaderView.setVisibility(View.GONE);
 //        mSupendPartitionView.setVisibility(View.GONE);
@@ -1422,7 +1446,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     /**
      * 显示地图图层
      */
-    private void showMapView(){
+    private void showMapView() {
         mMapView.setVisibility(View.VISIBLE);
         mMapHeaderView.setVisibility(View.VISIBLE);
 //        mSupendPartitionView.setVisibility(View.VISIBLE);
@@ -1431,7 +1455,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     /**
      * 隐藏搜索提示布局
      */
-    private void hideSearchTipView(){
+    private void hideSearchTipView() {
         InputMethodUtils.hideInput(this);
         mLLSearchContainer.setVisibility(View.GONE);
         mEtSearchTip.setVisibility(View.VISIBLE);
@@ -1445,7 +1469,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     /**
      * 显示搜索提示布局
      */
-    private void showSearchTipView(){
+    private void showSearchTipView() {
         mLLSearchContainer.setVisibility(View.VISIBLE);
         InputMethodUtils.showInput(this, mEtSearchTip);
     }
@@ -1462,16 +1486,17 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * EditText输入内容后回调
+     *
      * @param s
      */
     @Override
     public void afterTextChanged(Editable s) {
-        if(s == null || TextUtils.isEmpty(s.toString())){
+        if (s == null || TextUtils.isEmpty(s.toString())) {
             mSearchProgressBar.setVisibility(View.GONE);
             return;
         }
         String content = s.toString();
-        if(!TextUtils.isEmpty(content) && !TextUtils.isEmpty(mCity)){
+        if (!TextUtils.isEmpty(content) && !TextUtils.isEmpty(mCity)) {
             // 调用高德地图搜索提示api
             InputtipsQuery inputquery = new InputtipsQuery(content, mCity);
             inputquery.setCityLimit(true);
@@ -1485,13 +1510,14 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * 高德地图搜索提示回调
+     *
      * @param list
      * @param i
      */
     @Override
     public void onGetInputtips(List<Tip> list, int i) {
         mSearchProgressBar.setVisibility(View.GONE);
-        if(list == null || list.size() == 0){
+        if (list == null || list.size() == 0) {
             return;
         }
         mSearchData.clear();
@@ -1530,9 +1556,9 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     @Override
     public void onItemClick(View v, int position) {
-        if(mSearchData != null && mSearchData.size() > 0){
+        if (mSearchData != null && mSearchData.size() > 0) {
             Tip tip = mSearchData.get(position);
-            if(tip == null){
+            if (tip == null) {
                 return;
             }
             hideSearchTipView();
@@ -1546,10 +1572,22 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == Constant.AroundMsg.REQUEST_CODE) {
+            if (data == null) {
+                return;
+            }
+            String poi = data.getStringExtra(Constant.AroundMsg.KEY_POI);
+            mPoiManager.queryPoi(poi, mCity, new LatLonPoint(mLatLng.latitude, mLatLng.longitude));
+        }
+    }
+
     /**
      * 地图模式
      */
-    private enum MapMode{
+    private enum MapMode {
         /**
          * 普通模式:显示地图图层
          */
@@ -1575,9 +1613,10 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
         /**
          * 设置RecycleView条目点击
+         *
          * @param listener
          */
-        public void setOnItemClickListener(OnItemClickListener listener){
+        public void setOnItemClickListener(OnItemClickListener listener) {
             this.mListener = listener;
         }
 
@@ -1600,7 +1639,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
         @Override
         public int getItemCount() {
-            if(mData != null && mData.size() > 0){
+            if (mData != null && mData.size() > 0) {
                 return mData.size();
             }
             return 0;
@@ -1608,7 +1647,7 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
         @Override
         public void onClick(View v) {
-            if(v != null && mListener != null){
+            if (v != null && mListener != null) {
                 int postion = (int) v.getTag();
                 mListener.onItemClick(v, postion);
             }
@@ -1619,9 +1658,10 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
     /**
      * 搜索ViewHolder
      */
-    private static class SearchViewHolder extends RecyclerView.ViewHolder{
+    private static class SearchViewHolder extends RecyclerView.ViewHolder {
         TextView tvSearchTitle;
         TextView tvSearchLoc;
+
         public SearchViewHolder(@NonNull View itemView) {
             super(itemView);
             tvSearchTitle = itemView.findViewById(R.id.tv_search_title);
@@ -1631,9 +1671,10 @@ public class MapActivity extends BaseActivity implements GPSView.OnGPSViewClickL
 
     /**
      * 是否打开GPS
+     *
      * @return
      */
-    private boolean isGpsOpen(){
+    private boolean isGpsOpen() {
         return mLocMgr.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 

@@ -3,6 +3,7 @@ package com.jiyouliang.fmap.view.map;
 import android.content.Context;
 import android.support.constraint.ConstraintLayout;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -49,6 +50,7 @@ public class NearbySearchView extends ConstraintLayout implements View.OnClickLi
         if (mListener == null) {
             return;
         }
+        Log.d("NearbySearchView","onClick");
         mListener.onNearbySearchClick();
     }
 }
