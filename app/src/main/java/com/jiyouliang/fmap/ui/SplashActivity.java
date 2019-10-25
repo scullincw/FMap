@@ -26,7 +26,7 @@ public class SplashActivity extends BaseActivity {
      */
     private final int REQ_CODE_PERMISSIONS = 1;
 
-    /**
+    /*=
      * 动画时长
      */
     private final long DURATION = 800;
